@@ -1,11 +1,16 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Home Page</title>
+    <title>Images</title>
 </head>
 <body>
-<h1>${message}</h1>
+<h1>Images</h1>
+<ul>
+    <li>${image.id}: ${image.imgpath}</li>
+    <c:forEach items="${images}" var="image">
+        <li>${image.id}: ${image.imgpath}</li>
+    </c:forEach>
+</ul>
 </body>
 </html>

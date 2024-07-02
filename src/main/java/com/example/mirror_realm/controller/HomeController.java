@@ -9,7 +9,7 @@ public class HomeController {
 
    @GetMapping("/")
    public String home(Model model) {
-      model.addAttribute("message", "Hello, World");
-      return "index"; // this will resolve to /WEB-INF/jsp/index.jsp
+      model.addAttribute("message", "Hello, World!");
+      return "index";
    }
 }
