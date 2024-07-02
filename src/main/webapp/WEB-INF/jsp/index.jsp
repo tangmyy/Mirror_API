@@ -6,6 +6,10 @@
     <title>Home Page</title>
 </head>
 <body>
-<h1>${message}</h1>
+<h1>Images</h1>
+<c:forEach var="image" items="${images}">
+    <p>${image.imgpath}</p> <!-- Debugging line -->
+    <img src="${pageContext.request.contextPath}/${image.imgpath}" alt="Image" />
+</c:forEach>
 </body>
 </html>
