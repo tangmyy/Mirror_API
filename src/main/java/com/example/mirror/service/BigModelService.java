@@ -170,8 +170,8 @@ public class BigModelService extends WebSocketListener {
             roleContent.setContent(totalAnswer);
             historyList.add(roleContent);
          }
-         wsCloseFlag = true;
-         totalFlag = true;
+         wsCloseFlag = true;        // 设置wsCloseFlag为true，表示WebSocket连接可以关闭
+         totalFlag = true;          // 设置totalFlag为true，表示可以接受新的用户输入
       }
    }
 
@@ -224,10 +224,11 @@ public class BigModelService extends WebSocketListener {
       String url = authUrl.replace("http://", "ws://").replace("https://", "wss://");
       Request request = new Request.Builder().url(url).build();
       totalAnswer = "";
+      totalFlag = false; // 重置 totalFlag
       WebSocket webSocket = client.newWebSocket(request, new BigModelService("1", false));
 
       // 等待回答完成
-      while (totalAnswer.isEmpty()) {
+      while (!totalFlag) {
          Thread.sleep(100);
       }
       return totalAnswer;
