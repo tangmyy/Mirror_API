@@ -1,10 +1,10 @@
 // src/main/java/com/example/mirror/MirrorApplication.java
 package com.example.mirror;
 
+import com.example.mirror.service.Impl.BigModelServiceImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.example.mirror.service.BigModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 
@@ -12,7 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 public class MirrorApplication implements CommandLineRunner {
 
     @Autowired
-    private BigModelService bigModelService;
+    private BigModelServiceImpl bigModelServiceImpl;
 
     public static void main(String[] args) {
         SpringApplication.run(MirrorApplication.class, args);
@@ -20,7 +20,7 @@ public class MirrorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        bigModelService.start();
+        bigModelServiceImpl.start();
     }
 }
 
