@@ -33,6 +33,66 @@ public class ImagesController {
     @Value("${file.upload-path}")
     private String uploadDir;
 
+    @PostMapping("/api/images/upload")
+    public String uploadImage(@RequestParam("file") MultipartFile file,
+                              @RequestParam("description") String description,
+                              @RequestParam("isPublic") boolean isPublic,
+                              @RequestParam("tags") String tagsJson,
+                              HttpSession session) {
+        Users user = (Users) session.getAttribute("user");
+        if (user == null) {
+            return "用户未登录";
+        }
+
+        if (file.isEmpty()) {
+            return "上传失败，请选择一个文件";
+        }
+
+        String originalFileName = file.getOriginalFilename();
+        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID().toString() + fileExtension;
+
+        try {
+            saveFile(file, newFileName);
+
+            Images image = new Images();
+            image.setUserid(user.getId());
+            image.setUrl("/images/" + newFileName);
+            image.setDescription(description);
+            image.setisPublic(isPublic);
+            image.setCreated(LocalDateTime.now());
+
+            // 检查点：输出 tagsJson 内容
+            System.out.println("tagsJson: " + tagsJson);
+
+            // 使用ObjectMapper将JSON数组转换为String
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<String> tagsList = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+            String tagsString = String.join(";", tagsList);
+            image.setTags(tagsString);
+
+            imagesMapper.insert(image);
+            // 如果图片是公开的，则将其插入到 galleries 表中
+            saveOrUpdatePublicImageToGalleries(image);
+
+            return "上传成功";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "上传失败";
+        }
+    }
+
+    @DeleteMapping("/api/images")
+    public String deleteImage(@RequestParam("id") int id) {
+        // 检查图片是否在 galleries 表中存在
+        if (imagesMapper.countImageInGalleries(id) > 0) {
+            galleriesMapper.deleteFromGalleries(id);
+        }
+        // 删除 images 表中的图片记录
+        imagesMapper.deleteById(id);
+        return "删除成功";
+    }
+
     @PutMapping("/api/images")
     public String updateImage(@RequestParam("id") int id,
                               @RequestParam("description") String description,
@@ -88,65 +148,6 @@ public class ImagesController {
         } else {
             return null;
         }
-    }
-
-    @PostMapping("/api/images/upload")
-    public String uploadImage(@RequestParam("file") MultipartFile file,
-                              @RequestParam("description") String description,
-                              @RequestParam("isPublic") boolean isPublic,
-                              @RequestParam("tags") String tagsJson,
-                              HttpSession session) {
-        Users user = (Users) session.getAttribute("user");
-        if (user == null) {
-            return "用户未登录";
-        }
-
-        if (file.isEmpty()) {
-            return "上传失败，请选择一个文件";
-        }
-
-        String originalFileName = file.getOriginalFilename();
-        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String newFileName = UUID.randomUUID().toString() + fileExtension;
-
-        try {
-            saveFile(file, newFileName);
-
-            Images image = new Images();
-            image.setUserid(user.getId());
-            image.setUrl("/images/" + newFileName);
-            image.setDescription(description);
-            image.setisPublic(isPublic);
-            image.setCreated(LocalDateTime.now());
-
-            // 检查点：输出 tagsJson 内容
-            System.out.println("tagsJson: " + tagsJson);
-
-            // 使用ObjectMapper将JSON数组转换为String
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<String> tagsList = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
-            String tagsString = String.join(";", tagsList);
-            image.setTags(tagsString);
-
-            imagesMapper.insert(image);
-            // 如果图片是公开的，则将其插入到 galleries 表中
-            saveOrUpdatePublicImageToGalleries(image);
-
-            return "上传成功";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "上传失败";
-        }
-    }
-    @DeleteMapping("/api/images")
-    public String deleteImage(@RequestParam("id") int id) {
-        // 检查图片是否在 galleries 表中存在
-        if (imagesMapper.countImageInGalleries(id) > 0) {
-            galleriesMapper.deleteFromGalleries(id);
-        }
-        // 删除 images 表中的图片记录
-        imagesMapper.deleteById(id);
-        return "删除成功";
     }
 
     private void saveFile(MultipartFile file, String fileName) throws IOException {

@@ -36,6 +36,7 @@
     </scm>
 
     <properties>
+        <!--    可以统一管理版本    -->
         <java.version>17</java.version>
     </properties>
 
