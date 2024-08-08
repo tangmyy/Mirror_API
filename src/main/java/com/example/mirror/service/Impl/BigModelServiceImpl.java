@@ -31,14 +31,6 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
    private Boolean wsCloseFlag;
    private static Boolean totalFlag = true;
 
-   public BigModelServiceImpl() {
-   }
-
-   public BigModelServiceImpl(String userId, Boolean wsCloseFlag) {
-      this.userId = userId;
-      this.wsCloseFlag = wsCloseFlag;
-   }
-
    public void start() throws Exception {
       while (true) {
          if (totalFlag) {
@@ -60,6 +52,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       }
    }
 
+   // 检查是否可以添加新的历史记录 如果历史记录的总长度超过 12000 个字符，则删除最早的五条记录
    public static boolean canAddHistory() {
       int history_length = 0;
       for (RoleContent temp : historyList) {
@@ -75,6 +68,8 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       }
    }
 
+   // 一个内部线程类，用于处理 WebSocket 的发送请求和接收响应。
+   // 这个类中的 run() 方法负责构建请求 JSON 并通过 WebSocket 发送，同时等待响应并处理响应数据
    class MyThread extends Thread {
       private WebSocket webSocket;
 
@@ -133,6 +128,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       }
    }
 
+   // 在 WebSocket 连接打开时调用，启动 MyThread 线程来处理请求
    @Override
    public void onOpen(WebSocket webSocket, Response response) {
       super.onOpen(webSocket, response);
@@ -142,6 +138,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
    }
 
    // 现有的消息处理逻辑...(tmy)
+   // 处理从 WebSocket 接收到的消息 解析消息内容并输出，同时更新历史记录列表和 WebSocket 关闭标志
    @Override
    public void onMessage(WebSocket webSocket, String text) {
       JsonParse myJsonParse = gson.fromJson(text, JsonParse.class);
@@ -175,6 +172,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       }
    }
 
+   // 在 WebSocket 连接失败时调用，输出错误信息并尝试关闭连接
    @Override
    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
       super.onFailure(webSocket, t, response);
@@ -193,6 +191,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       }
    }
 
+   // 生成经过身份验证的 URL，用于 WebSocket 连接。该方法使用 HMAC-SHA256 算法生成签名并构建完整的请求 URL
    public static String getAuthUrl(String hostUrl, String apiKey, String apiSecret) throws Exception {
       URL url = new URL(hostUrl);
       SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
@@ -217,6 +216,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
 
 /**********************************************************************************************************************/
 
+   //发送一个新的问题并返回答案。此方法首先设置新问题的内容，然后通过 WebSocket 发送请求，等待响应并返回答案
    public String askQuestion(String question) throws Exception {
       NewQuestion = question;
       String authUrl = getAuthUrl(hostUrl, apiKey, apiSecret);
@@ -227,42 +227,47 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       totalFlag = false; // 重置 totalFlag
       WebSocket webSocket = client.newWebSocket(request, new BigModelServiceImpl("1", false));
 
-      // 等待回答完成
-      while (!totalFlag) {
+      while (!totalFlag) {          // 等待回答完成
          Thread.sleep(100);
       }
       return totalAnswer;
    }
 
-
    /**********************************************************************************************************************/
 
+   public BigModelServiceImpl() {
+   }
 
-   class JsonParse {
+   public BigModelServiceImpl(String userId, Boolean wsCloseFlag) {
+      this.userId = userId;
+      this.wsCloseFlag = wsCloseFlag;
+   }
+
+   class JsonParse {                // 内部类，用于解析 JSON 响应的数据结构。包含 Header 和 Payload 子类
       Header header;
       Payload payload;
    }
 
-   class Header {
+   class Header {                   // 内部类，用于表示 JSON 响应中的头部信息，包含响应代码、状态和会话 ID
       int code;
       int status;
       String sid;
    }
 
-   class Payload {
+   class Payload {                  // 内部类，用于表示 JSON 响应中的有效负载，包含选择列表
       Choices choices;
    }
 
-   class Choices {
+   class Choices {                  // 内部类，用于表示 JSON 响应中的有效负载，包含选择列表
       List<Text> text;
    }
 
-   class Text {
+   class Text {                     // 内部类，用于表示文本内容，包含角色和文本内容
       String role;
       String content;
    }
 
-   class RoleContent {
+   class RoleContent {              // 内部类，用于表示角色内容，包含角色和内容的 getter 和 setter 方法
       String role;
       String content;
 
