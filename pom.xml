@@ -19,12 +19,12 @@
     <description>Mirror_API</description>
 
     <url/>
+    <!--列出项目使用的许可证信息-->
     <licenses>
-        <!--列出项目使用的许可证信息-->
         <license/>
     </licenses>
+    <!--列出项目的开发人员-->
     <developers>
-        <!--列出项目的开发人员-->
         <developer/>
     </developers>
     <scm>
@@ -41,10 +41,12 @@
     </properties>
 
     <dependencies>
+        <!--开发环境热部署-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

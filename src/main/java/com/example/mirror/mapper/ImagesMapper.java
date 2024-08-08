@@ -8,9 +8,11 @@ import java.util.List;
 
 @Mapper
 public interface ImagesMapper extends BaseMapper<Images> {
+    // 查询
     @Select("SELECT * FROM images")
     List<Images> selectAllImages();
 
+    // 查询
     @Select("SELECT * FROM images WHERE userid = #{userId}")
     List<Images> selectImagesByUserId(int userId);
 
@@ -18,12 +20,17 @@ public interface ImagesMapper extends BaseMapper<Images> {
     @Select("SELECT COUNT(*) FROM galleries WHERE imageid = #{imageid}")
     int countImageInGalleries(@Param("imageid") int imageid);
 
-    @Update("UPDATE images SET description = #{description}, tags = #{tags}, isPublic = #{isPublic} WHERE id = #{id}")
-    int updateImage(@Param("id") int id, @Param("description") String description, @Param("tags") String tags, @Param("isPublic") boolean isPublic);
 
     // 将图片插入到 galleries 表中
     @Insert("INSERT INTO galleries (imageid, userid, url, description, tags) VALUES (#{imageid}, #{userid}, #{url}, #{description}, #{tags})")
     void insertIntoGalleries(@Param("imageid") int imageid, @Param("userid") int userid, @Param("url") String url, @Param("description") String description, @Param("tags") String tags);
+
+
+    // 删除
     @Delete("DELETE FROM images WHERE id = #{id}")
     void deleteById(@Param("id") int id);
+
+    // 更新
+    @Update("UPDATE images SET description = #{description}, tags = #{tags}, isPublic = #{isPublic} WHERE id = #{id}")
+    int updateImage(@Param("id") int id, @Param("description") String description, @Param("tags") String tags, @Param("isPublic") boolean isPublic);
 }
