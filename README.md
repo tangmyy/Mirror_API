@@ -1,4 +1,5 @@
-# Mirror_API (SpringBoot +Vue2)
+# Mirror_API (SpringBoot +Vue2)(前后端分离)
+# 前端项目在主页 mirror
 
 ## Hello, 这是一个图片在线相册(支持GIF格式)
 
