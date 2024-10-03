@@ -15,58 +15,24 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class BigModelServiceImpl extends WebSocketListener implements BigModelService {
-   public static final String hostUrl = "https://spark-api.xf-yun.com/v3.5/chat";
-   public static final String appid = "fda264df";
-   public static final String apiSecret = "NDhmZjY0YzFiYjhkYTM1NWUxYzIxNzM3";
-   public static final String apiKey = "52c675637d3b3d2c959abd808ca1107c";
+   public static final String hostUrl = "https://spark-api.xf-yun.com/v3.5/chat";      // 接口的基础URL，用于连接Spark大模型的API
+   public static final String appid = "fda264df";                                      // 应用的App ID，用于身份验证
+   public static final String apiSecret = "NDhmZjY0YzFiYjhkYTM1NWUxYzIxNzM3";          // 应用的API密钥，用于身份验证中的签名生成
+   public static final String apiKey = "52c675637d3b3d2c959abd808ca1107c";             // 应用的API Key，用于身份验证
 
-   public static List<RoleContent> historyList = new ArrayList<>();
-   public static String totalAnswer = "";
-   public static String NewQuestion = "我爱我的祖国";
-   public static final Gson gson = new Gson();
+   public static List<RoleContent> historyList = new ArrayList<>();                    // 用于存储对话历史记录的列表，每条记录包括角色和内容
+
+   public static String totalAnswer = "";                                              // 用于存储从大模型接收到的完整回答内容
+   public static String NewQuestion = "我爱我的祖国";                                   // 用于存储新的用户问题，默认初始值为“我爱我的祖国”
+
+   public static final Gson gson = new Gson();                                         // Gson实例，用于在JSON和Java对象之间进行转换
    private String userId;
-   private Boolean wsCloseFlag;
-   private static Boolean totalFlag = true;
-
-   public void start() throws Exception {
-      while (true) {
-         if (totalFlag) {
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("我：");
-            totalFlag = false;
-            NewQuestion = scanner.nextLine();
-            String authUrl = getAuthUrl(hostUrl, apiKey, apiSecret);
-            OkHttpClient client = new OkHttpClient.Builder().build();
-            String url = authUrl.replace("http://", "ws://").replace("https://", "wss://");
-            Request request = new Request.Builder().url(url).build();
-            for (int i = 0; i < 1; i++) {
-               totalAnswer = "";
-               WebSocket webSocket = client.newWebSocket(request, new BigModelServiceImpl(i + "", false));
-            }
-         } else {
-            Thread.sleep(200);
-         }
-      }
-   }
-
-   // 检查是否可以添加新的历史记录 如果历史记录的总长度超过 12000 个字符，则删除最早的五条记录
-   public static boolean canAddHistory() {
-      int history_length = 0;
-      for (RoleContent temp : historyList) {
-         history_length = history_length + temp.content.length();
-      }
-      if (history_length > 12000) {
-         for (int i = 0; i < 5; i++) {
-            historyList.remove(0);
-         }
-         return false;
-      } else {
-         return true;
-      }
-   }
+   private Boolean wsCloseFlag;                                                        // WebSocket关闭标志，用于指示WebSocket连接是否应关闭
+   private static Boolean totalFlag = true;                                            // 标志是否可以接受新的用户输入，控制主循环中的输入和处理逻辑
 
    // 一个内部线程类，用于处理 WebSocket 的发送请求和接收响应。
    // 这个类中的 run() 方法负责构建请求 JSON 并通过 WebSocket 发送，同时等待响应并处理响应数据
@@ -113,6 +79,7 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
             requestJson.put("header", header);
             requestJson.put("parameter", parameter);
             requestJson.put("payload", payload);
+            // todo
             webSocket.send(requestJson.toString());
 
             while (true) {
@@ -124,6 +91,29 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
             webSocket.close(1000, "");
          } catch (Exception e) {
             e.printStackTrace();
+         }
+      }
+   }
+
+   public void start() throws Exception {
+      while (true) {
+         if (totalFlag) {
+            Scanner scanner = new Scanner(System.in);    // 创建一个 Scanner 对象，用于从标准输入（控制台）读取用户输入 ?:和scanf有什么区别
+            System.out.print("我：");
+            totalFlag = false;
+            NewQuestion = scanner.nextLine();
+
+            String authUrl = getAuthUrl(hostUrl, apiKey, apiSecret);
+            OkHttpClient client = new OkHttpClient.Builder().build();
+            String url = authUrl.replace("http://", "ws://").replace("https://", "wss://");
+            Request request = new Request.Builder().url(url).build();
+
+            for (int i = 0; i < 1; i++) {
+               totalAnswer = "";
+               WebSocket webSocket = client.newWebSocket(request, new BigModelServiceImpl(i + "", false));
+            }
+         } else {
+            Thread.sleep(200);
          }
       }
    }
@@ -214,6 +204,21 @@ public class BigModelServiceImpl extends WebSocketListener implements BigModelSe
       return httpUrl.toString();
    }
 
+   // 检查是否可以添加新的历史记录 如果历史记录的总长度超过 12000 个字符，则删除最早的五条记录
+   public static boolean canAddHistory() {
+      int history_length = 0;
+      for (RoleContent temp : historyList) {
+         history_length = history_length + temp.content.length();
+      }
+      if (history_length > 12000) {
+         for (int i = 0; i < 5; i++) {
+            historyList.remove(0);
+         }
+         return false;
+      } else {
+         return true;
+      }
+   }
 /**********************************************************************************************************************/
 
    //发送一个新的问题并返回答案。此方法首先设置新问题的内容，然后通过 WebSocket 发送请求，等待响应并返回答案

@@ -17,11 +17,12 @@ public class BigModelController {
 
    @PostMapping("/ask")
    public Map<String, Object> askQuestion(@RequestBody Map<String, String> request) {
-      String question = request.get("question");
       Map<String, Object> response = new HashMap<>();
       try {
-         // 使用 BigModelServiceImpl 发送问题并获取答案
-         String answer = bigModelServiceImpl.askQuestion(question);
+         String question = request.get("question");         // 从请求体中获取问题
+         String answer = bigModelServiceImpl.askQuestion(question);         // 调用BigModelServiceImpl的askQuestion方法
+
+         // 将结果返回给前端
          response.put("success", true);
          response.put("answer", answer);
       } catch (Exception e) {
@@ -30,8 +31,6 @@ public class BigModelController {
       }
       return response;
    }
-
-
 
 
 }
